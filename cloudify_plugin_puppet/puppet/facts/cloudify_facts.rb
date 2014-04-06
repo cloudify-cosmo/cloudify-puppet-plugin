@@ -10,9 +10,7 @@ if not ENV.has_key?(env_var) then
   raise "Environment variable #{env_var} is not set"
 end
 
-attributes = ({
-  "cloudify" => JSON.parse( IO.read(ENV[env_var]) )
-})
+attributes = JSON.parse(IO.read(ENV[env_var]))
 
 class Hash
     def flatten_to_hash(current_prefix="", separator="_")

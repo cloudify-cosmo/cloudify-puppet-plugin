@@ -138,6 +138,13 @@ class PuppetManager(object):
             temp_file.write(contents)
 
         self._sudo("mv", temp_file.name, filename)
+
+    def _prog_available_for_root(self, prog):
+        with open(os.devnull, "w") as fnull:
+            which_exitcode = subprocess.call(
+                ["/usr/bin/sudo", "which", prog], stdout=fnull, stderr=fnull)
+        return which_exitcode == 0
+
     # Copy+paste from Chef plugin - end
 
     # http://stackoverflow.com/a/5953974
@@ -179,7 +186,14 @@ class PuppetManager(object):
         if 'server' not in p:
             raise PuppetParamsError("puppet_config.server is missing")
 
+    def puppet_is_installed(self):
+        return self._prog_available_for_root('puppet')
+
     def install(self):
+        if self.puppet_is_installed():
+            self.ctx.logger.info("Not installing Puppet as "
+                                 "it's already installed")
+            return
         url = self.get_repo_package_url()
         response = requests.head(url)
         if response.status_code != requests.codes.ok:
@@ -243,7 +257,7 @@ class PuppetManager(object):
         facts = self.props.get('facts', {})
         if 'cloudify' in facts:
             raise PuppetError("Puppet attributes must not contain 'cloudify'")
-        facts = _context_to_struct(ctx)
+        facts['cloudify'] = _context_to_struct(ctx)
         if ctx.related:
             facts['cloudify']['related'] = _context_to_struct(ctx.related)
         t = 'puppet.{0}.{1}.{2}.'.format(
@@ -275,7 +289,7 @@ class PuppetManager(object):
         )
         run_file.close()
         self._sudo('chmod', '+x', run_file.name)
-        self.ctx.logger.info("Will run: '{0}' (in {1})".format(cmd, 
+        self.ctx.logger.info("Will run: '{0}' (in {1})".format(cmd,
                                                                run_file.name))
         self._sudo(run_file.name)
 
@@ -343,6 +357,9 @@ class RHELPuppetManager(RubyGemJsonExtraPackageMixin, PuppetManager):
         return platform.linux_distribution()[0] in (
             'redhat', 'centos', 'fedora')
 
+    def get_repo_package_url(self):
+        raise NotImplementedError()
+
     def install_package_from_url(self, url):
         self._sudo("rpm", "-ivh", url)
 
@@ -353,4 +370,3 @@ class RHELPuppetManager(RubyGemJsonExtraPackageMixin, PuppetManager):
         else:
             p = package_name + '-' + str(package_version)
         self._sudo('yum', 'install', '-y', p)
-
