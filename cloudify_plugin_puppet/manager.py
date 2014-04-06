@@ -176,11 +176,6 @@ class PuppetManager(object):
                 "puppet_config.environment must contain only alphanumeric "
                 "characters or underscores, you gave '{0}'".format(env))
         self.environment = env
-        for tag in p.get('tags', []):
-            if not PUPPET_TAG_RE.match(tag):
-                raise PuppetParamsError(
-                    "puppet_config.tags[*] must match {0}, you gave "
-                    "'{1}'".format(PUPPET_TAG_RE, tag))
         if 'server' not in p:
             raise PuppetParamsError("puppet_config.server is missing")
 
@@ -242,11 +237,13 @@ class PuppetManager(object):
             facts_destination_path))
         self._sudo('cp', facts_source_path, facts_destination_path)
 
-    def run(self):
+    def run(self, tags=None):
+        ctx = self.ctx
+        self.install()
         facts = self.props.get('facts', {})
         if 'cloudify' in facts:
             raise PuppetError("Puppet attributes must not contain 'cloudify'")
-        facts = _context_to_struct(self.ctx)
+        facts = _context_to_struct(ctx)
         if ctx.related:
             facts['cloudify']['related'] = _context_to_struct(ctx.related)
         t = 'puppet.{0}.{1}.{2}.'.format(
@@ -263,13 +260,8 @@ class PuppetManager(object):
             "--logdest", "syslog"
         ]
 
-        tags = self.props.get('tags', [])
-
-        if self.props.get('add_operation_tag', False):
-            tags += ['cloudify_operation_' + ctx.operation]
-
         if tags:
-            cmd += ['--tags', ','.join(self.props['tags'])]
+            cmd += ['--tags', ','.join(tags)]
 
         cmd = ' '.join(cmd)
 
@@ -344,37 +336,21 @@ class DebianPuppetManager(PuppetManager):
 
 
 class RHELPuppetManager(RubyGemJsonExtraPackageMixin, PuppetManager):
+    """ UNTESTED """
 
     @staticmethod
     def _handles():
         return platform.linux_distribution()[0] in (
             'redhat', 'centos', 'fedora')
 
-#     def get_repo_package_url(self):
-#         ver = platform.linux_distribution()[1].partition('/')[0]
-#         return 'http://apt.puppetlabs.com/puppetlabs-release-{0}.deb'.format(
-#             ver)
-
     def install_package_from_url(self, url):
         self._sudo("rpm", "-ivh", url)
 
+    # XXX: package_version is not sanitized
+    def install_package(self, package_name, package_version=None):
+        if package_version is None:
+            p = package_name
+        else:
+            p = package_name + '-' + str(package_version)
+        self._sudo('yum', 'install', '-y', p)
 
-from cloudify.mocks import MockCloudifyContext
-ctx = MockCloudifyContext(
-    node_name='node_name',
-    node_id=datetime.datetime.utcnow().strftime('node_name_%Y%m%d_%H%M%S'),
-    operation='create',
-    properties={
-    'puppet_config': {
-        'add_operation_tag': True,
-        'environment': 'e1',
-        'tags': ['a', 'b'],
-        'server': 'puppet',
-        'node_name_prefix': 'pfx-',
-        'node_name_suffix': '.puppet.example.com',
-    }
-})
-
-c = PuppetManager(ctx)
-c.install()
-c.run()
