@@ -2,7 +2,7 @@ import copy
 
 from cloudify.decorators import operation as _operation
 
-from cloudify_plugin_puppet.manager import (PuppetParamsError,
+from puppet_plugin.manager import (PuppetParamsError,
                                             PuppetManager,
                                             PUPPET_TAG_RE)
 
