@@ -48,7 +48,7 @@ types:
         properties:
             # All Puppet related configuration goes inside
             # the "puppet_config" property.
-            - puppet_config:
+            - puppet_config
 
                 # - server: (required)
                 #
@@ -87,11 +87,11 @@ types:
             # to the operation being performed. The operation is taken
             # from the passed context (CloudifyContext.operation)
             cloudify.interfaces.lifecycle:
-                - create:    cloudify_plugin_puppet.operations.operation
-                - configure: cloudify_plugin_puppet.operations.operation
-                - start:     cloudify_plugin_puppet.operations.operation
-                - stop:      cloudify_plugin_puppet.operations.operation
-                - delete:    cloudify_plugin_puppet.operations.operation
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
 
     # Aliases for GUI, as requested
     app_server_puppet: {derived_from: middleware_server_puppet}
@@ -104,17 +104,17 @@ relationships:
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  cloudify_plugin_puppet.operations.operation
-                - postconfigure: cloudify_plugin_puppet.operations.operation
-                - establish:     cloudify_plugin_puppet.operations.operation
-                - unlink:        cloudify_plugin_puppet.operations.operation
+                - preconfigure:  puppet_plugin.operations.operation
+                - postconfigure: puppet_plugin.operations.operation
+                - establish:     puppet_plugin.operations.operation
+                - unlink:        puppet_plugin.operations.operation
     cloudify.puppet.connected_to:
         derived_from: cloudify.relationships.connected_to
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  cloudify_plugin_puppet.operations.operation
-                - postconfigure: cloudify_plugin_puppet.operations.operation
-                - establish:     cloudify_plugin_puppet.operations.operation
-                - unlink:        cloudify_plugin_puppet.operations.operation
+                - preconfigure:  puppet_plugin.operations.operation
+                - postconfigure: puppet_plugin.operations.operation
+                - establish:     puppet_plugin.operations.operation
+                - unlink:        puppet_plugin.operations.operation
 

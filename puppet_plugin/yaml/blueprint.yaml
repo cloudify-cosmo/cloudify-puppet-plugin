@@ -5,7 +5,7 @@ plugins:
         properties:
             url: https://github.com/ilyash/cloudify-plugin-existing-server/archive/master.zip
 
-    cloudify_plugin_puppet:
+    puppet_plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
             url: https://github.com/Fewbytes/cloudify-plugin-puppet/archive/master.zip
