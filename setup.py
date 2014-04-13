@@ -20,7 +20,7 @@ setuptools.setup(
         "cloudify-plugins-common",
     ],
     package_data={
-        'cloudify_plugin_puppet': ['puppet/facts/cloudify_facts.rb']
+        'puppet_plugin': ['puppet/facts/cloudify_facts.rb']
     },
     dependency_links=[
         "{0}#egg=cloudify-plugins-common-{1}".format(PLUGIN_COMMONS,
