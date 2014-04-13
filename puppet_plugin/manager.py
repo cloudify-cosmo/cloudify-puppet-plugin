@@ -337,7 +337,6 @@ class DebianPuppetManager(PuppetManager):
         os.remove(pkg_file.name)
 
     def refresh_packages_cache(self):
-        return  # XXX: dev mode
         self._sudo('apt-get', 'update')
 
     # XXX: package_version is not sanitized
