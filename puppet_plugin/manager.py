@@ -181,7 +181,7 @@ class PuppetManager(object):
         if not PUPPET_ENV_RE.match(env):
             raise PuppetParamsError(
                 "puppet_config.environment must contain only alphanumeric "
-                "characters or underscores, you gave '{0}'".format(env))
+                "characters, you gave '{0}'".format(env))
         self.environment = env
         if 'server' not in p:
             raise PuppetParamsError("puppet_config.server is missing")
