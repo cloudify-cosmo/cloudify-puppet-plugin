@@ -78,7 +78,7 @@ def _context_to_struct(ctx):
 class PuppetManager(object):
 
     EXTRA_PACKAGES = []
-    DEFAULT_VERSION = '3.4.3-1puppetlabs1'
+    DEFAULT_VERSION = '3.5.1-1puppetlabs1'
     DIRS = {
         'local_repo': '~/cloudify/puppet',
         'local_custom_facts': '/opt/cloudify/puppet/facts',
@@ -204,8 +204,10 @@ class PuppetManager(object):
         self.ctx.logger.info("Installing package from {0}".format(url))
         self.install_package_from_url(url)
         self.refresh_packages_cache()
-        self.install_package('puppet',
-                             self.props.get('version', self.DEFAULT_VERSION))
+        for p in 'puppet-common', 'puppet':
+            self.install_package(p,
+                                 self.props.get('version',
+                                                self.DEFAULT_VERSION))
         for package_name in self.EXTRA_PACKAGES:
             self.install_package(package_name)
 
