@@ -87,7 +87,6 @@ class PuppetTest(unittest.TestCase):
 
     def _match_in_config(self, re_, *args, **kwargs):
         conf = self._get_config_file(*args, **kwargs)
-        print(conf)
         ok = re.search(re_, conf, re.MULTILINE)
         self.assertTrue(ok, "Regex in config not found: "+re_)
 
