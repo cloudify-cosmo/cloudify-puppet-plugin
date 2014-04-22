@@ -90,7 +90,6 @@ class PuppetTest(unittest.TestCase):
         print(conf)
         ok = re.search(re_, conf, re.MULTILINE)
         self.assertTrue(ok, "Regex in config not found: "+re_)
-        
 
     def test_environment(self):
         e = 'puppetenv590b430c9f994fa5aebd93f224bb8b7f'
@@ -108,7 +107,6 @@ class PuppetTest(unittest.TestCase):
                               properties={
                                   'environment': 'e1',
                               })
-        
 
     def test_pfx_sfx(self):
         for config_key in 'certname', 'node_name_value':
@@ -119,7 +117,6 @@ class PuppetTest(unittest.TestCase):
                                       'node_name_prefix': 'nodepfx',
                                       'node_name_suffix': 'nodesfx',
                                   })
-        
 
     def test_tags(self):
         tags = ['t1', 't2']

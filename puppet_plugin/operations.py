@@ -3,8 +3,8 @@ import copy
 from cloudify.decorators import operation as _operation
 
 from puppet_plugin.manager import (PuppetParamsError,
-                                            PuppetManager,
-                                            PUPPET_TAG_RE)
+                                   PuppetManager,
+                                   PUPPET_TAG_RE)
 
 EXPECTED_OP_PREFIXES = (
     'cloudify.interfaces.lifecycle',
