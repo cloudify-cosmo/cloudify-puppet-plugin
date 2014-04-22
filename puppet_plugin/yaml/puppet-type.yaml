@@ -3,41 +3,7 @@
 #
 # WARNING:
 # /etc/sudoers must not have "Default requiretty" for Puppet plugin to work
-#
-# WARNING:
-# It is not recommended to use different Puppet versions on same server and we
-# do not test such configuration. Example:
-#
-#     nodes:
-#         -
-#             name: server
-#             ...
-#         -
-#             name: puppet_node_1
-#             type: app_server_puppet
-#             properties:
-#                 puppet_config:
-#                     version: A  # *** Different versions ***
-#                     ...
-#             relationships:
-#                 -
-#                     type: cloudify.relationships.contained_in
-#                     target: server  # *** Same server ***
-#         -
-#             name: puppet_node_2
-#             type: app_server_puppet
-#             properties:
-#                 puppet_config:
-#                     version: B  # *** Different versions ***
-#                     ...
-#             relationships:
-#                 -
-#                     type: cloudify.relationships.contained_in
-#                     target: server  # *** Same server ***
-#
-#
-# WARNING:
-# Puppet uninstall is not supported at this time.
+
 
 imports:
     - 'cloudify.types'
