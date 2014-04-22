@@ -155,7 +155,7 @@ class PuppetManager(object):
             ctx.logger.debug("PuppetManager class: {0}".format(c))
             return super(PuppetManager, cls).__new__(c)
         # Disable magic for subclasses
-        return super(PuppetManager, cls).__new__(c, ctx)
+        return super(PuppetManager, cls).__new__(cls, ctx)
 
     @staticmethod
     def _get_class():
@@ -172,6 +172,7 @@ class PuppetManager(object):
         self.ctx = ctx
         self.props = self.ctx.properties['puppet_config']
         self._process_properties()
+        self.dirs = {k: os.path.expanduser(v) for k, v in self.DIRS.items()}
 
     def _process_properties(self):
         p = self.props
@@ -208,13 +209,12 @@ class PuppetManager(object):
         for package_name in self.EXTRA_PACKAGES:
             self.install_package(package_name)
 
-        self.dirs = {k: os.path.expanduser(v) for k, v in self.DIRS.items()}
         self._sudo("mkdir", "-p", *self.dirs.values())
         self._sudo("chmod", "700", *self.dirs.values())
         self.install_custom_facts()
         self.configure()
 
-    def configure(self):
+    def _get_config_file_contents(self):
         p = self.props
         node_name = (
             p.get('node_name_prefix', '') +
@@ -236,7 +236,11 @@ class PuppetManager(object):
             certname=certname,
             node_name=node_name,
         )
-        self._sudo_write_file('/etc/puppet/puppet.conf', conf)
+        return conf
+
+    def configure(self):
+        contents = self._get_config_file_contents()
+        self._sudo_write_file('/etc/puppet/puppet.conf', contents)
 
     def refresh_packages_cache(self):
         pass
