@@ -5,7 +5,7 @@ import unittest
 from cloudify.mocks import MockCloudifyContext
 import puppet_plugin.operations
 operation = puppet_plugin.operations.operation
-from puppet_plugin.manager import DebianPuppetManager
+from puppet_plugin.manager import PuppetManager
 
 
 # Warning: Singleton
@@ -81,7 +81,7 @@ class PuppetTest(unittest.TestCase):
 
     def _get_config_file(self, *args, **kwargs):
         ctx = self._make_context(*args, **kwargs)
-        mgr = DebianPuppetManager(ctx)
+        mgr = PuppetManager(ctx)
         conf = mgr._get_config_file_contents()
         return conf
 

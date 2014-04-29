@@ -3,7 +3,7 @@
 # 991ab4ce0596930836f7d4e33f6f9bd70894d85a/
 # services/puppet/PuppetBootstrap.groovy
 import datetime
-import inspect
+# import glob
 import json
 import os
 import requests
@@ -43,6 +43,10 @@ PUPPET_TAG_RE = re.compile('\A[a-z0-9_][a-z0-9_:\.\-]*\Z')
 PUPPET_ENV_RE = re.compile('\A[a-z0-9]+\Z')
 
 
+def quote_shell_arg(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
 class PuppetError(RuntimeError):
     """An exception for all Puppet related errors"""
 
@@ -76,15 +80,6 @@ def _context_to_struct(ctx):
 
 
 class PuppetManager(object):
-
-    EXTRA_PACKAGES = []
-    DEFAULT_VERSION = '3.5.1-1puppetlabs1'
-    DIRS = {
-        'local_repo': '~/cloudify/puppet',
-        'local_custom_facts': '/opt/cloudify/puppet/facts',
-        'cloudify_module': '/opt/cloudify/puppet/modules/cloudify',
-    }
-    metadata_file_path = '/opt/cloudify/puppet/metadata.json'
 
     # Copy+paste from Chef plugin - start
     def _log_text(self, title, prefix, text):
@@ -149,48 +144,29 @@ class PuppetManager(object):
 
     # http://stackoverflow.com/a/5953974
     def __new__(cls, ctx):
-        """ Transparent factory. PuppetManager() returns a subclass. """
+        """ Transparent factory. PuppetManager() returns a class
+        assembled from PuppetManager class the relevant subclasses of
+        PuppetInstaller and PuppetRunner """
         if cls is PuppetManager:
-            c = cls._get_class()
-            ctx.logger.debug("PuppetManager class: {0}".format(c))
-            return super(PuppetManager, cls).__new__(c)
+            r = PuppetRunner.get_runner_class(ctx)
+            i = PuppetInstaller.get_installer_class()
+            cls = type(r.__name__ + i.__name__, (r, i, PuppetManager), {})
+            ctx.logger.debug("PuppetManager class: {0}".format(cls))
         # Disable magic for subclasses
         return super(PuppetManager, cls).__new__(cls, ctx)
-
-    @staticmethod
-    def _get_class():
-        classes = filter(inspect.isclass, globals().values())
-        classes = [c for c in classes if issubclass(c, PuppetManager)]
-        classes = [c for c in classes if c is not PuppetManager]
-        classes = [c for c in classes if c._handles()]
-        if len(classes) != 1:
-            raise PuppetInternalLogicError(
-                "Failed to find correct PuppetManager")
-        return classes[0]
 
     def __init__(self, ctx):
         self.ctx = ctx
         self.props = self.ctx.properties['puppet_config']
-        self._process_properties()
+        self.environment = None
+        self.process_properties()
         self.dirs = {k: os.path.expanduser(v) for k, v in self.DIRS.items()}
-
-    def _process_properties(self):
-        p = self.props
-        if 'environment' not in p:
-            raise PuppetParamsError("puppet_config.environment is missing")
-        env = re.sub('[- .]', '_', p['environment'])
-        if not PUPPET_ENV_RE.match(env):
-            raise PuppetParamsError(
-                "puppet_config.environment must contain only alphanumeric "
-                "characters, you gave '{0}'".format(env))
-        self.environment = env
-        if 'server' not in p:
-            raise PuppetParamsError("puppet_config.server is missing")
 
     def puppet_is_installed(self):
         return self._prog_available_for_root('puppet')
 
     def install(self):
+        self.configure() # XXX
         if self.puppet_is_installed():
             self.ctx.logger.info("Not installing Puppet as "
                                  "it's already installed")
@@ -216,34 +192,6 @@ class PuppetManager(object):
         self.install_custom_facts()
         self.configure()
 
-    def _get_config_file_contents(self):
-        p = self.props
-        node_name = (
-            p.get('node_name_prefix', '') +
-            self.ctx.node_id +
-            p.get('node_name_suffix', '')
-        )
-        certname = (
-            datetime.datetime.utcnow().strftime('%Y%m%d%H%M') +
-            '-' +
-            node_name
-        )
-        local_modules_path = os.path.join(self.dirs['local_repo'], 'modules')
-
-        conf = PUPPET_CONF_TPL.format(
-            environment=self.environment,
-            modulepath=':'.join(
-                PUPPET_CONF_MODULE_PATH + [local_modules_path]),
-            server=self.props['server'],
-            certname=certname,
-            node_name=node_name,
-        )
-        return conf
-
-    def configure(self):
-        contents = self._get_config_file_contents()
-        self._sudo_write_file('/etc/puppet/puppet.conf', contents)
-
     def refresh_packages_cache(self):
         pass
 
@@ -257,59 +205,37 @@ class PuppetManager(object):
             facts_destination_path))
         self._sudo('cp', facts_source_path, facts_destination_path)
 
-    def run(self, tags=None):
-        ctx = self.ctx
-        self.install()
-        facts = self.props.get('facts', {})
-        if 'cloudify' in facts:
-            raise PuppetError("Puppet attributes must not contain 'cloudify'")
-        facts['cloudify'] = _context_to_struct(ctx)
-        if ctx.related:
-            facts['cloudify']['related'] = _context_to_struct(ctx.related)
-        t = 'puppet.{0}.{1}.{2}.'.format(
-            ctx.node_name, ctx.node_id, os.getpid())
-        temp_file = tempfile.NamedTemporaryFile
-        facts_file = temp_file(prefix=t, suffix=".facts_in.json", delete=False)
-        json.dump(facts, facts_file, indent=4)
-        facts_file.close()
 
-        cmd = [
-            "puppet", "agent",
-            "--onetime", "--no-daemonize",
-            "--logdest", "console",
-            "--logdest", "syslog"
-        ]
-
-        if tags:
-            cmd += ['--tags', ','.join(tags)]
-
-        cmd = ' '.join(cmd)
-
-        run_file = temp_file(prefix=t, suffix=".run.sh", delete=False)
-        run_file.write(
-            '#!/bin/bash -e\n'
-            'export FACTERLIB={0}\n'
-            'export CLOUDIFY_FACTS_FILE={1}\n'
-            .format(self.DIRS['local_custom_facts'], facts_file.name) +
-            cmd + '\n'
-        )
-        run_file.close()
-        self._sudo('chmod', '+x', run_file.name)
-        self.ctx.logger.info("Will run: '{0}' (in {1})".format(cmd,
-                                                               run_file.name))
-        self._sudo(run_file.name)
-
-        os.remove(facts_file.name)
+# *** Installer ***
 
 
 class RubyGemJsonExtraPackageMixin(object):
     EXTRA_PACKAGES = ["rubygem-json"]
 
 
-class DebianPuppetManager(PuppetManager):
+class PuppetInstaller(object):
+    EXTRA_PACKAGES = []
+    DEFAULT_VERSION = '3.5.1-1puppetlabs1'
+    DIRS = {
+        'local_repo': '~/cloudify/puppet',
+        'local_custom_facts': '/opt/cloudify/puppet/facts',
+        'cloudify_module': '/opt/cloudify/puppet/modules/cloudify',
+    }
+
+    @classmethod
+    def get_installer_class(cls):
+        classes = cls.__subclasses__()
+        classes = [c for c in classes if c._installer_handles()]
+        if len(classes) != 1:
+            raise PuppetInternalLogicError(
+                "Failed to find correct PuppetInstaller")
+        return classes[0]
+
+
+class PuppetDebianInstaller(PuppetInstaller):
 
     @staticmethod
-    def _handles():
+    def _installer_handles():
         return platform.linux_distribution()[0].lower() in (
             'debian', 'ubuntu', 'mint')
 
@@ -354,11 +280,11 @@ class DebianPuppetManager(PuppetManager):
         self._sudo('apt-get', 'install', '-y', p)
 
 
-class RHELPuppetManager(RubyGemJsonExtraPackageMixin, PuppetManager):
+class PuppetRHELInstaller(RubyGemJsonExtraPackageMixin, PuppetInstaller):
     """ UNTESTED """
 
     @staticmethod
-    def _handles():
+    def _installer_handles():
         return platform.linux_distribution()[0] in (
             'redhat', 'centos', 'fedora')
 
@@ -375,3 +301,163 @@ class RHELPuppetManager(RubyGemJsonExtraPackageMixin, PuppetManager):
         else:
             p = package_name + '-' + str(package_version)
         self._sudo('yum', 'install', '-y', p)
+
+# *** Runner ***
+
+
+class PuppetRunner(object):
+
+    @staticmethod
+    def get_runner_class(ctx):
+        if 'server' in ctx.properties['puppet_config']:
+            cls = PuppetAgentRunner
+        else:
+            cls = PuppetStandaloneRunner
+        return cls
+
+    def configure(self):
+        pass
+
+    def set_environment(self, e):
+        env = re.sub('[- .]', '_', e)
+        if not PUPPET_ENV_RE.match(env):
+            raise PuppetParamsError(
+                "puppet_config.environment must contain only alphanumeric "
+                "characters, you gave '{0}'".format(env))
+        self.environment = env
+
+    def run(self, tags=None):
+        ctx = self.ctx
+        self.install()
+        facts = self.props.get('facts', {})
+        if 'cloudify' in facts:
+            raise PuppetError("Puppet attributes must not contain 'cloudify'")
+        facts['cloudify'] = _context_to_struct(ctx)
+        if ctx.related:
+            facts['cloudify']['related'] = _context_to_struct(ctx.related)
+        t = 'puppet.{0}.{1}.{2}.'.format(
+            ctx.node_name, ctx.node_id, os.getpid())
+        temp_file = tempfile.NamedTemporaryFile
+        facts_file = temp_file(prefix=t, suffix=".facts_in.json", delete=False)
+        json.dump(facts, facts_file, indent=4)
+        facts_file.close()
+
+        cmd = [
+            "puppet"
+        ] + self.get_runner_cmd() + [
+            "--logdest", "console",
+            "--logdest", "syslog"
+        ]
+
+        if tags:
+            cmd += ['--tags', ','.join(tags)]
+
+        cmd = ' '.join(cmd)
+
+        run_file = temp_file(prefix=t, suffix=".run.sh", delete=False)
+        run_file.write(
+            '#!/bin/bash -e\n'
+            'export FACTERLIB={0}\n'
+            'export CLOUDIFY_FACTS_FILE={1}\n'
+            .format(self.DIRS['local_custom_facts'], facts_file.name) +
+            cmd + '\n'
+        )
+        run_file.close()
+        self._sudo('chmod', '+x', run_file.name)
+        self.ctx.logger.info("Will run: '{0}' (in {1})".format(cmd,
+                                                               run_file.name))
+        self._sudo(run_file.name)
+
+        os.remove(facts_file.name)
+
+    def get_modules_path(self):
+        local_modules_path = os.path.join(self.dirs['local_repo'], 'modules')
+        modulepath = ':'.join(PUPPET_CONF_MODULE_PATH + [local_modules_path])
+        return modulepath
+
+
+class PuppetAgentRunner(PuppetRunner):
+
+    def process_properties(self):
+        p = self.props
+        if 'environment' not in p:
+            raise PuppetParamsError("puppet_config.environment is missing")
+        self.set_environment(p['environment'])
+
+    def get_runner_cmd(self):
+        return ["agent", "--onetime", "--no-daemonize"]
+
+    def _get_config_file_contents(self):
+        p = self.props
+        node_name = (
+            p.get('node_name_prefix', '') +
+            self.ctx.node_id +
+            p.get('node_name_suffix', '')
+        )
+        certname = (
+            datetime.datetime.utcnow().strftime('%Y%m%d%H%M') +
+            '-' +
+            node_name
+        )
+
+        conf = PUPPET_CONF_TPL.format(
+            environment=self.environment,
+            modulepath=self.get_modules_path(),
+            server=self.props['server'],
+            certname=certname,
+            node_name=node_name,
+        )
+        return conf
+
+    def configure(self):
+        contents = self._get_config_file_contents()
+        self._sudo_write_file('/etc/puppet/puppet.conf', contents)
+
+
+class PuppetStandaloneRunner(PuppetRunner):
+    def process_properties(self):
+        props = self.props
+        if 'environment' in props:
+            self.set_environment(props['environment'])
+        if 'modules' in props:
+            if not isinstance(props['modules'], list):
+                raise RuntimeError("puppet_config.modules must be a list")
+
+    def get_installed_modules(self):
+        ret = set()
+        # # Permissions problem
+        # for modules_root in PUPPET_CONF_MODULE_PATH:
+        #     modules_dirs = glob.glob(os.path.join(modules_root, '*'))
+        #     for d in modules_dirs:
+        #         with open(os.path.join(d, 'metadata.json')) as f:
+        #             metadata = json.load(f)
+        #             name = metadata['name']
+        #             ret.add(name.replace('/', '-'))
+
+        # Ugly output parsing :(
+        out, _ = self._sudo('puppet', 'module', 'list', '--modulepath',
+                            self.get_modules_path())
+        out = out.split()
+        prev = None
+        for cur in out:
+            if cur.startswith('('):
+                ret.add(prev)
+            prev = cur
+        return ret
+
+    def configure(self):
+        props = self.props
+        installed_modules = self.get_installed_modules()
+        for module in props.get('modules', []):
+            if module not in installed_modules:
+                self._sudo('puppet', 'module', 'install', module)
+
+    # TODO: provide $cloudify_local_repo via facter
+    def get_runner_cmd(self):
+        e = self.props['execute']
+        e = e.replace('$cloudify_local_repo',
+                      "'" + self.dirs['local_repo'] + "'")
+        cmd = ["apply", "--execute", quote_shell_arg(e)]
+        if self.environment:
+            cmd += ['--environment', self.environment]
+        return cmd

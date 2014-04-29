@@ -65,18 +65,20 @@ if __name__ == '__main__':
     ctx = MockCloudifyContext(
         node_name='node_name',
         node_id=datetime.datetime.utcnow().strftime('node_name_%Y%m%d_%H%M%S'),
-        operation='cloudify.interfaces.lifecycle.create',
+        operation='cloudify.interfaces.lifecycle.start',
         properties={
             'puppet_config': {
-                'add_operation_tag': True,
-                'operations_tags': {
-                    'create': ['op_tag_create', 'tag2'],
-                },
+                # 'add_operation_tag': True,
+                # 'operations_tags': {
+                #     'create': ['op_tag_create', 'tag2'],
+                # },
                 'environment': 'e1',
-                'tags': ['a', 'b'],
-                'server': 'puppet',
+                # 'tags': ['a', 'b'],
+                'execute': 'package{"git":}\nvcsrepo{$cloudify_local_repo: ensure => present, provider => git, source   => "git://github.com/bruce/rtex.git", }',
                 'node_name_prefix': 'pfx-',
                 'node_name_suffix': '.puppet.example.com',
+                'modules': ['puppetlabs-vcsrepo'],
+                # jcraigbrown-artifactory
             }
         })
 
