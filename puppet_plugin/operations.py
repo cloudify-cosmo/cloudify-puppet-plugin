@@ -25,6 +25,20 @@ def operation(ctx, **kwargs):
 
     op = _extract_op(ctx)
     props = ctx.properties['puppet_config']
+
+    if 'execute' in props:
+        e = props['execute']
+        ctx.logger.info("Found 'execute' in properties")
+        if isinstance(e, dict):
+            ctx.logger.info("Detected per-operation 'execute' in properties")
+            if op in e:
+                e = e[op]
+            else:
+                e = None
+                ctx.logger.info("No 'execute' for operation '{0}'".format(op))
+    else:
+        e = None
+
     tags = copy.deepcopy(props.get('tags', []))
     for tag in tags:
         if not PUPPET_TAG_RE.match(tag):
@@ -52,34 +66,9 @@ def operation(ctx, **kwargs):
             return
     else:
         # Only run on "start"
-        if op != 'start':
+        if (op != 'start') and (not e):
             return
 
     mgr = PuppetManager(ctx)
     # print(tags)
-    mgr.run(tags=tags)
-
-if __name__ == '__main__':
-    import datetime
-    from cloudify.mocks import MockCloudifyContext
-    ctx = MockCloudifyContext(
-        node_name='node_name',
-        node_id=datetime.datetime.utcnow().strftime('node_name_%Y%m%d_%H%M%S'),
-        operation='cloudify.interfaces.lifecycle.start',
-        properties={
-            'puppet_config': {
-                # 'add_operation_tag': True,
-                # 'operations_tags': {
-                #     'create': ['op_tag_create', 'tag2'],
-                # },
-                'environment': 'e1',
-                # 'tags': ['a', 'b'],
-                'execute': 'package{"git":}\nvcsrepo{$cloudify_local_repo: ensure => present, provider => git, source   => "git://github.com/bruce/rtex.git", }',
-                'node_name_prefix': 'pfx-',
-                'node_name_suffix': '.puppet.example.com',
-                'modules': ['puppetlabs-vcsrepo'],
-                # jcraigbrown-artifactory
-            }
-        })
-
-    operation(ctx)
+    mgr.run(tags=tags, execute=e)

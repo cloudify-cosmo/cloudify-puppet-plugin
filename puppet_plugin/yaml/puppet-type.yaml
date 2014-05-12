@@ -37,7 +37,7 @@ types:
                 # 
                 # - facts: (optional)
                 #
-                # Hash with facts to add to facter. Must not contain
+                # Map with facts to add to facter. Must not contain
                 # `cloudify` nor `cloudify_*` keys as these are
                 # generated automatically.
                 #

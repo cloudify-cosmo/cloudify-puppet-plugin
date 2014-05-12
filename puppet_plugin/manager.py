@@ -47,6 +47,16 @@ def quote_shell_arg(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
+def is_resource_url(url):
+    """
+    Tells wether a URL is pointing to a resource (which is uploaded with
+    the blueprint.
+    '/xyz.tar.gz' URLs are pointing to resources.
+    """
+    u = urlparse.urlparse(url)
+    return (not u.scheme), u.path
+
+
 class PuppetError(RuntimeError):
     """An exception for all Puppet related errors"""
 
@@ -166,7 +176,6 @@ class PuppetManager(object):
         return self._prog_available_for_root('puppet')
 
     def install(self):
-        self.configure() # XXX
         if self.puppet_is_installed():
             self.ctx.logger.info("Not installing Puppet as "
                                  "it's already installed")
@@ -318,6 +327,9 @@ class PuppetRunner(object):
     def configure(self):
         pass
 
+    def get_run_env_vars(self):
+        return {}
+
     def set_environment(self, e):
         env = re.sub('[- .]', '_', e)
         if not PUPPET_ENV_RE.match(env):
@@ -326,8 +338,9 @@ class PuppetRunner(object):
                 "characters, you gave '{0}'".format(env))
         self.environment = env
 
-    def run(self, tags=None):
+    def run(self, tags=None, execute=None):
         ctx = self.ctx
+        self.execute = execute
         self.install()
         facts = self.props.get('facts', {})
         if 'cloudify' in facts:
@@ -354,13 +367,17 @@ class PuppetRunner(object):
 
         cmd = ' '.join(cmd)
 
+        environ = self.get_run_env_vars()
+        environ = ["export {0}='{1}'\n".format(k, v)
+                   for k, v in environ.items()]
+        environ = ''.join(environ)
         run_file = temp_file(prefix=t, suffix=".run.sh", delete=False)
         run_file.write(
             '#!/bin/bash -e\n'
             'export FACTERLIB={0}\n'
-            'export CLOUDIFY_FACTS_FILE={1}\n'
-            .format(self.DIRS['local_custom_facts'], facts_file.name) +
-            cmd + '\n'
+            'export CLOUDIFY_FACTS_FILE={1}\n{2}'
+            .format(self.DIRS['local_custom_facts'], facts_file.name, environ)
+            + cmd + '\n'
         )
         run_file.close()
         self._sudo('chmod', '+x', run_file.name)
@@ -423,6 +440,9 @@ class PuppetStandaloneRunner(PuppetRunner):
             if not isinstance(props['modules'], list):
                 raise RuntimeError("puppet_config.modules must be a list")
 
+    def get_run_env_vars(self):
+        return {'FACTER_CLOUDIFY_LOCAL_REPO': self.dirs['local_repo']}
+
     def get_installed_modules(self):
         ret = set()
         # # Permissions problem
@@ -447,17 +467,99 @@ class PuppetStandaloneRunner(PuppetRunner):
 
     def configure(self):
         props = self.props
-        installed_modules = self.get_installed_modules()
-        for module in props.get('modules', []):
-            if module not in installed_modules:
-                self._sudo('puppet', 'module', 'install', module)
+        modules = props.get('modules', [])
+        if modules:
+            installed_modules = self.get_installed_modules()
+            for module in modules:
+                if module not in installed_modules:
+                    self._sudo('puppet', 'module', 'install', module)
+        # Download after modules allows overriding
+        if 'download' in props:
+            download = props['download']
+            if not isinstance(download, list):
+                download = [download]
+            for dl in download:
+                self._url_to_dir(dl, self.dirs['local_repo'])
 
     # TODO: provide $cloudify_local_repo via facter
     def get_runner_cmd(self):
-        e = self.props['execute']
-        e = e.replace('$cloudify_local_repo',
-                      "'" + self.dirs['local_repo'] + "'")
-        cmd = ["apply", "--execute", quote_shell_arg(e)]
+        cmd = [
+            "apply",
+            "--modulepath={0}".format(self.get_modules_path()),
+        ]
+
         if self.environment:
             cmd += ['--environment', self.environment]
+
+        cmd_done = False
+        e = self.execute
+        if e:
+            e = e.replace('$cloudify_local_repo',
+                          "'" + self.dirs['local_repo'] + "'")
+            cmd += ["--execute", quote_shell_arg(e)]
+            cmd_done = True
+
+        m = self.props.get('manifest')
+        if m:
+            cmd += [quote_shell_arg(os.path.join(self.dirs['local_repo'], m))]
+            cmd_done = True
+
+        if not cmd_done:
+            raise PuppetParamsError("Either 'execute' or 'manifest' " +
+                                    "must be specified")
+
         return cmd
+
+    def _url_to_dir(self, url, dst_dir):
+        """
+        Downloads .tar.gz from `url` and extracts to `dst_dir`.
+        If URL is relative ("/xyz.tar.gz"), it's fetched using
+        download_resource().
+        """
+
+        if url is None:
+            return
+
+        ctx = self.ctx
+
+        ctx.logger.info(
+            "Downloading from {0} and unpacking to {1}".format(url, dst_dir))
+        temp_archive = tempfile.NamedTemporaryFile(
+            suffix='.url_to_dir.tar.gz', delete=False)
+
+        is_resource, path = is_resource_url(url)
+        if is_resource:
+            ctx.logger.info("Getting resource {0} to {1}".format(path,
+                            temp_archive.name))
+            ctx.download_resource(path, temp_archive.name)
+        else:
+            ctx.logger.info("Downloading from {0} to {1}".format(url,
+                            temp_archive.name))
+            temp_archive.write(requests.get(url).content)
+            temp_archive.flush()
+            temp_archive.close()
+
+        command_list = [
+            'sudo',
+            'tar', '-C', dst_dir,
+            '--xform', 's#^' + os.path.basename(dst_dir) + '/##',
+            '-xzf', temp_archive.name]
+        try:
+            ctx.logger.info("Running: '%s'", ' '.join(command_list))
+            subprocess.check_call(command_list)
+        except subprocess.CalledProcessError as exc:
+            raise PuppetError("Failed to extract file {0} to directory {1} "
+                              "which was downloaded from {2}. Command: {3}. "
+                              "Exception: {4}".format(
+                                  temp_archive.name,
+                                  dst_dir,
+                                  url,
+                                  command_list,
+                                  exc))
+
+        os.remove(temp_archive.name)  # on failure, leave for debugging
+        # try:
+        #     os.rmdir(os.path.join(dst_dir, os.path.basename(dst_dir)))
+        # except OSError as e:
+        #     if e.errno != errno.ENOENT:
+        #         raise e
