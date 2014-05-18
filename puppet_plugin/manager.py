@@ -356,7 +356,8 @@ class PuppetRunner(object):
         facts_file.close()
 
         cmd = [
-            "puppet"
+            "puppet",
+            "--detailed-exitcodes",
         ] + self.get_runner_cmd() + [
             "--logdest", "console",
             "--logdest", "syslog"
@@ -376,8 +377,11 @@ class PuppetRunner(object):
             '#!/bin/bash -e\n'
             'export FACTERLIB={0}\n'
             'export CLOUDIFY_FACTS_FILE={1}\n{2}'
+            'e=0\n'
             .format(self.DIRS['local_custom_facts'], facts_file.name, environ)
-            + cmd + '\n'
+            + cmd + ' || e=$?\n'
+            'if [ $(($e & 4)) -eq 4 ];then exit 1;fi\n'
+            'exit 0\n'
         )
         run_file.close()
         self._sudo('chmod', '+x', run_file.name)
