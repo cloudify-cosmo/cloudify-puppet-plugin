@@ -469,8 +469,8 @@ class PuppetStandaloneRunner(PuppetRunner):
         props = self.props
         modules = props.get('modules', [])
         if modules:
-            installed_modules = self.get_installed_modules()
             for module in modules:
+                installed_modules = self.get_installed_modules()
                 if module not in installed_modules:
                     self._sudo('puppet', 'module', 'install', module)
         # Download after modules allows overriding
