@@ -357,8 +357,8 @@ class PuppetRunner(object):
 
         cmd = [
             "puppet",
-            "--detailed-exitcodes",
         ] + self.get_runner_cmd() + [
+            "--detailed-exitcodes",
             "--logdest", "console",
             "--logdest", "syslog"
         ]
