@@ -40,7 +40,7 @@ types:
                 #
                 # Puppet node name is constructed as follows:
                 # `node_name_prefix` + node_id + `node_name_suffix`
-                # 
+                #
                 # facts: (optional)
                 # -----
                 #
@@ -52,7 +52,7 @@ types:
                 # -----
                 #       deb:
                 #           VER_NAME: url://for-package-that-installs-repo.deb
-                # 
+                #
                 # Custom packages that are used for adding Puppet repository.
 
         interfaces:
@@ -122,4 +122,3 @@ relationships:
                 - postconfigure: puppet_plugin.operations.operation
                 - establish:     puppet_plugin.operations.operation
                 - unlink:        puppet_plugin.operations.operation
-
