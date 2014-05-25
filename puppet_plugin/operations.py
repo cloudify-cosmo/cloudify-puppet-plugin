@@ -80,6 +80,7 @@ def operation(ctx, **kwargs):
     props = ctx.properties['puppet_config']
 
     mgr = PuppetManager(ctx)
+    # print(mgr, isinstance(mgr, PuppetStandaloneRunner))
     tags = _prepare_tags(ctx, props, op)
 
     if isinstance(mgr, PuppetAgentRunner):
@@ -88,6 +89,7 @@ def operation(ctx, **kwargs):
                             format(op))
             return
         mgr.run(tags=(tags or []))
+        return
 
     if isinstance(mgr, PuppetStandaloneRunner):
         e = _op_specifc(ctx, props, op, 'execute')
@@ -101,5 +103,6 @@ def operation(ctx, **kwargs):
 
         if e or m:
             mgr.run(tags=(tags or []), execute=e, manifest=m)
+        return
 
     raise RuntimeError("Internal error: unknown Puppet Runner")

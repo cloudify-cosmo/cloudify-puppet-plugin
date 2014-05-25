@@ -18,9 +18,16 @@ class MockPuppetManager(object):
     def __init__(self, ctx):
         pass
 
-    def run(self, tags, execute):
-        self.__class__.tags = tags
-        self.__class__.execute = execute
+    def run(self, tags=None, execute=None, manifest=None):
+        MockPuppetManager.tags = tags
+        MockPuppetManager.execute = execute
+        MockPuppetManager.manifest = manifest
+
+class MockAgentPuppetManager(MockPuppetManager, PuppetAgentRunner):
+    pass
+
+class MockStandalonePuppetManager(MockPuppetManager, PuppetStandaloneRunner):
+    pass
 
 
 class PuppetTest(unittest.TestCase):
@@ -29,7 +36,6 @@ class PuppetTest(unittest.TestCase):
 
     def setUp(self):
         self.orig_puppet_manager = puppet_plugin.operations.PuppetManager
-        puppet_plugin.operations.PuppetManager = MockPuppetManager
 
     def _make_context(self, properties, operation):
         t = 'node_name_%Y%m%d_%H%M%S'
@@ -47,12 +53,14 @@ class PuppetTest(unittest.TestCase):
             'server': self.server
         }
         props.update(properties)
+        puppet_plugin.operations.PuppetManager = MockAgentPuppetManager
         return self._make_context(props, operation)
 
     def _make_standalone_context(self, properties={}, operation='create'):
         props = {
         }
         props.update(properties)
+        puppet_plugin.operations.PuppetManager = MockStandalonePuppetManager
         return self._make_context(props, operation)
 
     def test_operation_tag(self):

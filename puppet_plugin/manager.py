@@ -382,7 +382,9 @@ class PuppetRunner(object):
             'e=0\n'
             .format(self.DIRS['local_custom_facts'], facts_file.name, environ)
             + cmd + ' || e=$?\n'
-            'if [ $(($e & 4)) -eq 4 ];then exit 1;fi\n'
+            'echo Exit code: $e\n'
+            'if [ $e -eq 1 ];then exit 1;fi\n'
+            'if [ $(($e & 4)) -eq 4 ];then exit 4;fi\n'
             'exit 0\n'
         )
         run_file.close()
