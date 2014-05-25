@@ -78,6 +78,7 @@ class PuppetParamsError(PuppetError):
 def _context_to_struct(ctx):
     ret = {
         'node_id': ctx.node_id,
+        'node_name': ctx.node_name,
         'blueprint_id': ctx.blueprint_id,
         'deployment_id': ctx.deployment_id,
         'properties': ctx.properties,
@@ -338,9 +339,10 @@ class PuppetRunner(object):
                 "characters, you gave '{0}'".format(env))
         self.environment = env
 
-    def run(self, tags=None, execute=None):
+    def run(self, tags=None, execute=None, manifest=None):
         ctx = self.ctx
         self.execute = execute
+        self.manifest = manifest
         self.install()
         facts = self.props.get('facts', {})
         if 'cloudify' in facts:
@@ -443,21 +445,16 @@ class PuppetStandaloneRunner(PuppetRunner):
         if 'modules' in props:
             if not isinstance(props['modules'], list):
                 raise RuntimeError("puppet_config.modules must be a list")
+        if ('execute' not in props) and ('manifest' not in props):
+            raise PuppetParamsError("Either 'execute' or 'manifest' "
+                                    "must be specified under 'puppet_config'."
+                                    "None are specified.")
 
     def get_run_env_vars(self):
         return {'FACTER_CLOUDIFY_LOCAL_REPO': self.dirs['local_repo']}
 
     def get_installed_modules(self):
         ret = set()
-        # # Permissions problem
-        # for modules_root in PUPPET_CONF_MODULE_PATH:
-        #     modules_dirs = glob.glob(os.path.join(modules_root, '*'))
-        #     for d in modules_dirs:
-        #         with open(os.path.join(d, 'metadata.json')) as f:
-        #             metadata = json.load(f)
-        #             name = metadata['name']
-        #             ret.add(name.replace('/', '-'))
-
         # Ugly output parsing :(
         out, _ = self._sudo('puppet', 'module', 'list', '--modulepath',
                             self.get_modules_path())
@@ -498,8 +495,6 @@ class PuppetStandaloneRunner(PuppetRunner):
         cmd_done = False
         e = self.execute
         if e:
-            e = e.replace('$cloudify_local_repo',
-                          "'" + self.dirs['local_repo'] + "'")
             cmd += ["--execute", quote_shell_arg(e)]
             cmd_done = True
 
@@ -510,7 +505,7 @@ class PuppetStandaloneRunner(PuppetRunner):
 
         if not cmd_done:
             raise PuppetParamsError("Either 'execute' or 'manifest' " +
-                                    "must be specified")
+                                    "must be specified. None are specified")
 
         return cmd
 

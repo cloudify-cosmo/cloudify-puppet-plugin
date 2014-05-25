@@ -54,6 +54,47 @@ types:
                 #           VER_NAME: url://for-package-that-installs-repo.deb
                 #
                 # Custom packages that are used for adding Puppet repository.
+                #
+                # modules: (optional)
+                # -------
+                # List of Puppet modules to install before executing any
+                # Puppet DSL (passed using "manifest" or "execute")
+                #
+                # Example:
+                # ===8<===
+                #     modules:
+                #         - puppetlabs-apache
+                #         - puppetlabs-concat
+                #         - puppetlabs-stdlib
+                #         - puppetlabs-vcsrepo
+                # ===8<===
+                #
+                # execute: (either "execute" or "manifest" must be present)
+                # -------
+                # hash of per operation Puppet DSL to run.
+                #
+                # Example:
+                # ===8<===
+                #     execute:
+                #         configure: |
+                #             package{'git':}
+                #             ->
+                #             vcsrepo{$cloudify_local_repo:
+                #               ensure => present,
+                #               provider => git,
+                #               source   => 'https://github.com/Fewbytes/cosmo-tester-puppet-downloadable.git',
+                #             }
+                #         start: |
+                #             class{'cloudify_hello_world':
+                #             }
+                # ===8<===
+                #
+                # add_operation_tag: (boolean, default false)
+                # -----------------
+                #
+                # In addition to any other tags, passes cloudify_operation_X
+                # tag, where X is the operation name (such as "configure" or
+                # "start" for example).
 
         interfaces:
             # All operations mapped to same entry point in Puppet plugin
