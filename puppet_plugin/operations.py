@@ -87,7 +87,7 @@ def operation(ctx, **kwargs):
             ctx.logger.info("No tags specific to operation '{0}', skipping".
                             format(op))
             return
-        mgr.run(tags=tags)
+        mgr.run(tags=(tags or []))
 
     if isinstance(mgr, PuppetStandaloneRunner):
         e = _op_specifc(ctx, props, op, 'execute')
@@ -98,6 +98,8 @@ def operation(ctx, **kwargs):
                                "must be specified for given operation. " +
                                "Both are specified for operation {0}".format(
                                    op))
-        mgr.run(tags=(tags or []), execute=e, manifest=m)
+
+        if e or m:
+            mgr.run(tags=(tags or []), execute=e, manifest=m)
 
     raise RuntimeError("Internal error: unknown Puppet Runner")

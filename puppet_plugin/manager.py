@@ -498,7 +498,7 @@ class PuppetStandaloneRunner(PuppetRunner):
             cmd += ["--execute", quote_shell_arg(e)]
             cmd_done = True
 
-        m = self.props.get('manifest')
+        m = self.manifest
         if m:
             cmd += [quote_shell_arg(os.path.join(self.dirs['local_repo'], m))]
             cmd_done = True
