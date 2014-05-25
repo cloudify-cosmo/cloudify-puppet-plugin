@@ -45,6 +45,7 @@ def _op_specifc(ctx, props, op, prop):
                                 format(prop, op))
     else:
         e = None
+        ctx.logger.info("Have not found {0} in properties".format(prop))
 
     return e
 
