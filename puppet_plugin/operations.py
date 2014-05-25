@@ -37,12 +37,16 @@ def _op_specifc(ctx, props, op, prop):
                             format(prop))
             if op in e:
                 e = e[op]
+                ctx.logger.info("Found '{0}' for operation '{1}'".
+                                format(prop, op))
             else:
                 e = None
                 ctx.logger.info("No '{0}' for operation '{1}'".
                                 format(prop, op))
     else:
         e = None
+
+    return e
 
 
 def _prepare_tags(ctx, props, op):
