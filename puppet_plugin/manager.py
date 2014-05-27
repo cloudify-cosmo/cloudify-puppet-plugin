@@ -171,7 +171,6 @@ class PuppetManager(object):
         self.props = self.ctx.properties['puppet_config']
         self.environment = None
         self.process_properties()
-        self.dirs = {k: os.path.expanduser(v) for k, v in self.DIRS.items()}
 
     def puppet_is_installed(self):
         return self._prog_available_for_root('puppet')
@@ -197,8 +196,8 @@ class PuppetManager(object):
         for package_name in self.EXTRA_PACKAGES:
             self.install_package(package_name)
 
-        self._sudo("mkdir", "-p", *self.dirs.values())
-        self._sudo("chmod", "700", *self.dirs.values())
+        self._sudo("mkdir", "-p", *self.DIRS.values())
+        self._sudo("chmod", "700", *self.DIRS.values())
         self.install_custom_facts()
         self.configure()
 
@@ -227,7 +226,7 @@ class PuppetInstaller(object):
     EXTRA_PACKAGES = []
     DEFAULT_VERSION = '3.5.1-1puppetlabs1'
     DIRS = {
-        'local_repo': '~/cloudify/puppet',
+        'local_repo': os.path.expanduser('~/cloudify/puppet'),
         'local_custom_facts': '/opt/cloudify/puppet/facts',
         'cloudify_module': '/opt/cloudify/puppet/modules/cloudify',
     }
@@ -396,7 +395,7 @@ class PuppetRunner(object):
         os.remove(facts_file.name)
 
     def get_modules_path(self):
-        local_modules_path = os.path.join(self.dirs['local_repo'], 'modules')
+        local_modules_path = os.path.join(self.DIRS['local_repo'], 'modules')
         modulepath = ':'.join(PUPPET_CONF_MODULE_PATH + [local_modules_path])
         return modulepath
 
@@ -453,7 +452,7 @@ class PuppetStandaloneRunner(PuppetRunner):
                                     "None are specified.")
 
     def get_run_env_vars(self):
-        return {'FACTER_CLOUDIFY_LOCAL_REPO': self.dirs['local_repo']}
+        return {'FACTER_CLOUDIFY_LOCAL_REPO': self.DIRS['local_repo']}
 
     def get_installed_modules(self):
         ret = set()
@@ -482,7 +481,7 @@ class PuppetStandaloneRunner(PuppetRunner):
             if not isinstance(download, list):
                 download = [download]
             for dl in download:
-                self._url_to_dir(dl, self.dirs['local_repo'])
+                self._url_to_dir(dl, self.DIRS['local_repo'])
 
     # TODO: provide $cloudify_local_repo via facter
     def get_runner_cmd(self):
@@ -502,7 +501,7 @@ class PuppetStandaloneRunner(PuppetRunner):
 
         m = self.manifest
         if m:
-            cmd += [quote_shell_arg(os.path.join(self.dirs['local_repo'], m))]
+            cmd += [quote_shell_arg(os.path.join(self.DIRS['local_repo'], m))]
             cmd_done = True
 
         if not cmd_done:
