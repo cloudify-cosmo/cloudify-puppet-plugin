@@ -3,7 +3,6 @@
 # 991ab4ce0596930836f7d4e33f6f9bd70894d85a/
 # services/puppet/PuppetBootstrap.groovy
 import datetime
-# import glob
 import json
 import os
 import requests
