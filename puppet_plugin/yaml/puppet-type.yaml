@@ -9,7 +9,7 @@ imports:
     - 'cloudify.types'
 
 types:
-    middleware_server_puppet:
+    cloudify.types.puppet.middleware_server:
         derived_from: cloudify.types.middleware_server
         properties:
             # All Puppet related configuration goes inside
@@ -167,7 +167,7 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    app_server_puppet:
+    cloudify.types.puppet.app_server:
         derived_from: cloudify.types.app_server
         properties:
             - puppet_config
@@ -179,7 +179,7 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    db_server_puppet:
+    cloudify.types.puppet.db_server:
         derived_from: cloudify.types.db_server
         properties:
             - puppet_config
@@ -191,8 +191,33 @@ types:
                 - stop:      puppet_plugin.operations.operation
                 - delete:    puppet_plugin.operations.operation
 
-    web_server_puppet:
+    cloudify.types.puppet.web_server:
         derived_from: cloudify.types.web_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+
+    cloudify.types.puppet.message_bus_server:
+        derived_from: cloudify.types.message_bus_server
+        properties:
+            - puppet_config
+        interfaces:
+            cloudify.interfaces.lifecycle:
+                - create:    puppet_plugin.operations.operation
+                - configure: puppet_plugin.operations.operation
+                - start:     puppet_plugin.operations.operation
+                - stop:      puppet_plugin.operations.operation
+                - delete:    puppet_plugin.operations.operation
+
+    cloudify.types.puppet.app_module:
+        derived_from: cloudify.types.app_module
         properties:
             - puppet_config
         interfaces:
