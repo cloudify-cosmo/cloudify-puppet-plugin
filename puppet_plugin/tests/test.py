@@ -23,8 +23,10 @@ class MockPuppetManager(object):
         MockPuppetManager.execute = execute
         MockPuppetManager.manifest = manifest
 
+
 class MockAgentPuppetManager(MockPuppetManager, PuppetAgentRunner):
     pass
+
 
 class MockStandalonePuppetManager(MockPuppetManager, PuppetStandaloneRunner):
     pass

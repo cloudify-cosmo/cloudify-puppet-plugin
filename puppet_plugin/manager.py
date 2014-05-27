@@ -483,7 +483,6 @@ class PuppetStandaloneRunner(PuppetRunner):
             for dl in download:
                 self._url_to_dir(dl, self.DIRS['local_repo'])
 
-    # TODO: provide $cloudify_local_repo via facter
     def get_runner_cmd(self):
         cmd = [
             "apply",
