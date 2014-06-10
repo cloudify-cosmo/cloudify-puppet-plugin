@@ -5,19 +5,31 @@ import unittest
 from cloudify.mocks import MockCloudifyContext
 import puppet_plugin.operations
 operation = puppet_plugin.operations.operation
-from puppet_plugin.manager import DebianPuppetManager
+from puppet_plugin.manager import (
+    PuppetManager, PuppetRunner, PuppetAgentRunner, PuppetStandaloneRunner)
 
 
 # Warning: Singleton
 class MockPuppetManager(object):
     """ Captures tags that Puppet would run with """
     tags = None
+    execute = None
 
     def __init__(self, ctx):
         pass
 
-    def run(self, tags):
-        self.__class__.tags = tags
+    def run(self, tags=None, execute=None, manifest=None):
+        MockPuppetManager.tags = tags
+        MockPuppetManager.execute = execute
+        MockPuppetManager.manifest = manifest
+
+
+class MockAgentPuppetManager(MockPuppetManager, PuppetAgentRunner):
+    pass
+
+
+class MockStandalonePuppetManager(MockPuppetManager, PuppetStandaloneRunner):
+    pass
 
 
 class PuppetTest(unittest.TestCase):
@@ -25,22 +37,33 @@ class PuppetTest(unittest.TestCase):
     server = 'puppet-master-server-name'
 
     def setUp(self):
-        puppet_plugin.operations.PuppetManager = MockPuppetManager
+        self.orig_puppet_manager = puppet_plugin.operations.PuppetManager
 
-    def _make_context(self, properties={}, operation='create'):
-        props = {
-            'server': self.server
-        }
-        props.update(properties)
+    def _make_context(self, properties, operation):
         t = 'node_name_%Y%m%d_%H%M%S'
         ctx = MockCloudifyContext(
             node_name='node_name',
             node_id=datetime.datetime.utcnow().strftime(t),
             operation='cloudify.interfaces.lifecycle.' + operation,
             properties={
-                'puppet_config': props
+                'puppet_config': properties
             })
         return ctx
+
+    def _make_agent_context(self, properties={}, operation='create'):
+        props = {
+            'server': self.server
+        }
+        props.update(properties)
+        puppet_plugin.operations.PuppetManager = MockAgentPuppetManager
+        return self._make_context(props, operation)
+
+    def _make_standalone_context(self, properties={}, operation='create'):
+        props = {
+        }
+        props.update(properties)
+        puppet_plugin.operations.PuppetManager = MockStandalonePuppetManager
+        return self._make_context(props, operation)
 
     def test_operation_tag(self):
 
@@ -48,7 +71,7 @@ class PuppetTest(unittest.TestCase):
             return tag.startswith('op_tag_')
 
         for op in 'create', 'delete':
-            ctx = self._make_context(
+            ctx = self._make_agent_context(
                 properties={
                     'operations_tags': {
                         'create': 'op_tag_create',
@@ -65,12 +88,12 @@ class PuppetTest(unittest.TestCase):
             self.assertEqual(operation_tags_count, 1)
 
     def test_add_operation_tag(self):
-            ctx = self._make_context(operation='start')
+            ctx = self._make_agent_context(operation='start')
             operation(ctx)
             self.assertNotIn('cloudify_operation_start',
                              MockPuppetManager.tags)
 
-            ctx = self._make_context(
+            ctx = self._make_agent_context(
                 operation='start',
                 properties={
                     'add_operation_tag': True,
@@ -80,8 +103,8 @@ class PuppetTest(unittest.TestCase):
             self.assertIn('cloudify_operation_start', MockPuppetManager.tags)
 
     def _get_config_file(self, *args, **kwargs):
-        ctx = self._make_context(*args, **kwargs)
-        mgr = DebianPuppetManager(ctx)
+        ctx = self._make_agent_context(*args, **kwargs)
+        mgr = PuppetManager(ctx)
         conf = mgr._get_config_file_contents()
         return conf
 
@@ -119,7 +142,7 @@ class PuppetTest(unittest.TestCase):
 
     def test_tags(self):
         tags = ['t1', 't2']
-        ctx = self._make_context(
+        ctx = self._make_agent_context(
             operation='start',
             properties={
                 'tags': tags,
@@ -128,3 +151,13 @@ class PuppetTest(unittest.TestCase):
         operation(ctx)
         for tag in tags:
             self.assertIn(tag, MockPuppetManager.tags)
+
+    def test_runner_choosing(self):
+
+        ctx = self._make_agent_context()
+        runner = PuppetRunner.get_runner_class(ctx)
+        self.assertEquals(runner, PuppetAgentRunner)
+
+        ctx = self._make_standalone_context()
+        runner = PuppetRunner.get_runner_class(ctx)
+        self.assertEquals(runner, PuppetStandaloneRunner)
