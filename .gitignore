@@ -4,7 +4,6 @@ __pycache__/
 
 # C extensions
 *.so
-*.iml
 
 # Distribution / packaging
 .Python
@@ -53,3 +52,6 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+*.iml
+
+*COMMIT_MSG
