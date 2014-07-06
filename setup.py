@@ -12,7 +12,7 @@ setuptools.setup(
     license='LICENSE',
     description='Cloudify Chef plugin',
     install_requires=[
-        'cloudify-plugins-common==3.0',
+        'cloudify-plugins-common>=3.0',
     ],
     package_data={
         'puppet_plugin': ['puppet/facts/cloudify_facts.rb']
