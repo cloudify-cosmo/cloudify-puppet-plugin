@@ -23,7 +23,7 @@ from puppet_plugin import get_version
 setuptools.setup(
     zip_safe=False,
     name='cloudify-puppet-plugin',
-    version='get_version()',
+    version=get_version(),
     author='ilya',
     author_email='ilya.sher@coding-knight.com',
     packages=['puppet_plugin'],
