@@ -1,10 +1,6 @@
 # WARNING:
 # /etc/sudoers must not have "Default requiretty" for Puppet plugin to work
 
-
-imports:
-    - http://www.getcloudify.org/spec/cloudify/{{ cloudify_version }}/types.yaml
-
 plugins:
     puppet_plugin:
         derived_from: cloudify.plugins.agent_plugin
