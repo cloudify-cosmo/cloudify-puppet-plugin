@@ -13,10 +13,3 @@
 #  * See the License for the specific language governing permissions and
 #  * limitations under the License.
 
-import json
-import pkgutil
-
-
-def get_version():
-    data = pkgutil.get_data('puppet_plugin', 'VERSION')
-    return json.loads(data)['version']

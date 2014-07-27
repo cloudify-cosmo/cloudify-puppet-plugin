@@ -17,13 +17,11 @@ __author__ = 'dank'
 
 import setuptools
 
-from puppet_plugin import get_version
-
 
 setuptools.setup(
     zip_safe=False,
     name='cloudify-puppet-plugin',
-    version=get_version(),
+    version='1.1',
     author='ilya',
     author_email='ilya.sher@coding-knight.com',
     packages=['puppet_plugin'],
@@ -34,8 +32,7 @@ setuptools.setup(
     ],
     package_data={
         'puppet_plugin': [
-            'puppet/facts/cloudify_facts.rb',
-            'VERSION'
+            'puppet/facts/cloudify_facts.rb'
         ]
     },
 )
