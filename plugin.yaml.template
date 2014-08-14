@@ -182,7 +182,7 @@ node_types:
     cloudify.types.puppet.db_server:
         derived_from: cloudify.types.db_server
         properties:
-            puppet_config {}
+            puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
                 - create:    puppet_plugin.operations.operation
