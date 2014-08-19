@@ -434,12 +434,21 @@ class PuppetAgentRunner(PuppetRunner):
 
     def _get_config_file_contents(self):
         p = self.props
-        node_name = (
+
+        if 'node_name_value' in p:
+            for conflicting_prop in 'node_name_prefix', 'node_name_suffix':
+                if conflicting_prop in p:
+                    raise NonRecoverableError("puppet_config can not have both"
+                                              " `node_name_value` and `{0}`"
+                                              "".format(conflicting_prop))
+
+        node_name = p.get('node_name_value') or (
             p.get('node_name_prefix', '') +
             self.ctx.node_id +
             p.get('node_name_suffix', '')
         )
-        certname = (
+
+        certname = p.get('certname') or (
             datetime.datetime.utcnow().strftime('%Y%m%d%H%M') +
             '-' +
             node_name
