@@ -2,7 +2,7 @@
 # /etc/sudoers must not have "Default requiretty" for Puppet plugin to work
 
 plugins:
-    puppet_plugin:
+    puppet-plugin:
         derived_from: cloudify.plugins.agent_plugin
         properties:
             url: https://github.com/cloudify-cosmo/cloudify-puppet-plugin/archive/{{ plugin_branch }}.zip
@@ -161,11 +161,11 @@ node_types:
             # to the operation being performed. The operation is taken
             # from the passed context (CloudifyContext.operation)
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
     cloudify.types.puppet.app_server:
         derived_from: cloudify.types.app_server
@@ -173,11 +173,11 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
     cloudify.types.puppet.db_server:
         derived_from: cloudify.types.db_server
@@ -185,11 +185,11 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
     cloudify.types.puppet.web_server:
         derived_from: cloudify.types.web_server
@@ -197,11 +197,11 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
 
     cloudify.types.puppet.message_bus_server:
@@ -210,11 +210,11 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
     cloudify.types.puppet.app_module:
         derived_from: cloudify.types.app_module
@@ -222,11 +222,11 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet_plugin.operations.operation
-                - configure: puppet_plugin.operations.operation
-                - start:     puppet_plugin.operations.operation
-                - stop:      puppet_plugin.operations.operation
-                - delete:    puppet_plugin.operations.operation
+                - create:    puppet-plugin.puppet_plugin.operations.operation
+                - configure: puppet-plugin.puppet_plugin.operations.operation
+                - start:     puppet-plugin.puppet_plugin.operations.operation
+                - stop:      puppet-plugin.puppet_plugin.operations.operation
+                - delete:    puppet-plugin.puppet_plugin.operations.operation
 
 relationships:
     cloudify.puppet.depends_on:
@@ -234,16 +234,16 @@ relationships:
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  puppet_plugin.operations.operation
-                - postconfigure: puppet_plugin.operations.operation
-                - establish:     puppet_plugin.operations.operation
-                - unlink:        puppet_plugin.operations.operation
+                - preconfigure:  puppet-plugin.puppet_plugin.operations.operation
+                - postconfigure: puppet-plugin.puppet_plugin.operations.operation
+                - establish:     puppet-plugin.puppet_plugin.operations.operation
+                - unlink:        puppet-plugin.puppet_plugin.operations.operation
     cloudify.puppet.connected_to:
         derived_from: cloudify.relationships.connected_to
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  puppet_plugin.operations.operation
-                - postconfigure: puppet_plugin.operations.operation
-                - establish:     puppet_plugin.operations.operation
-                - unlink:        puppet_plugin.operations.operation
+                - preconfigure:  puppet-plugin.puppet_plugin.operations.operation
+                - postconfigure: puppet-plugin.puppet_plugin.operations.operation
+                - establish:     puppet-plugin.puppet_plugin.operations.operation
+                - unlink:        puppet-plugin.puppet_plugin.operations.operation
