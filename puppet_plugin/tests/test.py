@@ -2,7 +2,9 @@ import datetime
 import re
 import unittest
 
+from cloudify.exceptions import NonRecoverableError
 from cloudify.mocks import MockCloudifyContext
+
 import puppet_plugin.operations
 operation = puppet_plugin.operations.operation
 from puppet_plugin.manager import (
@@ -139,6 +141,34 @@ class PuppetTest(unittest.TestCase):
                                       'node_name_prefix': 'nodepfx',
                                       'node_name_suffix': 'nodesfx',
                                   })
+
+    def _do_conflicting_node_name(self):
+        self._match_in_config('.',
+                              properties={
+                                  'environment': 'e1',
+                                  'node_name_value': 'conflict',
+                                  'node_name_prefix': 'nodepfx',
+                                  'node_name_suffix': 'nodesfx',
+                              })
+
+    def test_conflicting_node_name(self):
+        self.assertRaises(NonRecoverableError, self._do_conflicting_node_name)
+
+    def test_node_name_value(self):
+        re = '^\s*node_name_value\s*=\s*name-val\s*$$'
+        self._match_in_config(re,
+                              properties={
+                                  'environment': 'e1',
+                                  'node_name_value': 'name-val',
+                              })
+
+    def test_certname(self):
+        re = '^\s*certname\s*=\s*cert-val\s*$$'
+        self._match_in_config(re,
+                              properties={
+                                  'environment': 'e1',
+                                  'certname': 'cert-val',
+                              })
 
     def test_tags(self):
         tags = ['t1', 't2']
