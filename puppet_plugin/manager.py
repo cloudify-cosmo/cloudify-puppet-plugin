@@ -77,12 +77,12 @@ class PuppetParamsError(PuppetError):
 
 def _context_to_struct(ctx):
     return {
-        'node_id': ctx.node_id,
-        'node_name': ctx.node_name,
-        'blueprint_id': ctx.blueprint_id,
-        'deployment_id': ctx.deployment_id,
-        'properties': ctx.properties,
-        'runtime_properties': ctx.runtime_properties,
+        'node_id': ctx.instance.id,
+        'node_name': ctx.node.name,
+        'blueprint_id': ctx.blueprint.id,
+        'deployment_id': ctx.deployment.id,
+        'properties': ctx.node.properties,
+        'runtime_properties': ctx.instance.runtime_properties,
         'capabilities': _try_extract_capabilities(ctx),
         'host_ip': _try_extract_host_ip(ctx)
     }
@@ -189,7 +189,7 @@ class PuppetManager(object):
 
     def __init__(self, ctx):
         self.ctx = ctx
-        self.props = self.ctx.properties['puppet_config']
+        self.props = self.ctx.node.properties['puppet_config']
         self.environment = None
         self.process_properties()
 
@@ -339,7 +339,7 @@ class PuppetRunner(object):
 
     @staticmethod
     def get_runner_class(ctx):
-        if 'server' in ctx.properties['puppet_config']:
+        if 'server' in ctx.node.properties['puppet_config']:
             cls = PuppetAgentRunner
         else:
             cls = PuppetStandaloneRunner
@@ -371,7 +371,7 @@ class PuppetRunner(object):
         if ctx.related:
             facts['cloudify']['related'] = _related_to_struct(ctx.related)
         t = 'puppet.{0}.{1}.{2}.'.format(
-            ctx.node_name, ctx.node_id, os.getpid())
+            ctx.node.name, ctx.instance.id, os.getpid())
         temp_file = tempfile.NamedTemporaryFile
         facts_file = temp_file(prefix=t, suffix=".facts_in.json", delete=False)
         json.dump(facts, facts_file, indent=4)
@@ -444,7 +444,7 @@ class PuppetAgentRunner(PuppetRunner):
 
         node_name = p.get('node_name_value') or (
             p.get('node_name_prefix', '') +
-            self.ctx.node_id +
+            self.ctx.instance.id +
             p.get('node_name_suffix', '')
         )
 

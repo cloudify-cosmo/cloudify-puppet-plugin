@@ -82,7 +82,7 @@ def _prepare_tags(ctx, props, op):
 def operation(ctx, **kwargs):
 
     op = _extract_op(ctx)
-    props = ctx.properties['puppet_config']
+    props = ctx.node.properties['puppet_config']
 
     mgr = PuppetManager(ctx)
     # print(mgr, isinstance(mgr, PuppetStandaloneRunner))
