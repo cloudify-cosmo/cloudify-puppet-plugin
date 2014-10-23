@@ -160,11 +160,21 @@ node_types:
             # to the operation being performed. The operation is taken
             # from the passed context (CloudifyContext.operation)
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
     cloudify.types.puppet.app_server:
         derived_from: cloudify.types.app_server
@@ -172,11 +182,21 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
     cloudify.types.puppet.db_server:
         derived_from: cloudify.types.db_server
@@ -184,11 +204,21 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
     cloudify.types.puppet.web_server:
         derived_from: cloudify.types.web_server
@@ -196,11 +226,21 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
 
     cloudify.types.puppet.message_bus_server:
@@ -209,11 +249,21 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
     cloudify.types.puppet.app_module:
         derived_from: cloudify.types.app_module
@@ -221,11 +271,21 @@ node_types:
             puppet_config: {}
         interfaces:
             cloudify.interfaces.lifecycle:
-                - create:    puppet.puppet_plugin.operations.operation
-                - configure: puppet.puppet_plugin.operations.operation
-                - start:     puppet.puppet_plugin.operations.operation
-                - stop:      puppet.puppet_plugin.operations.operation
-                - delete:    puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
 
 relationships:
     cloudify.puppet.depends_on:
@@ -233,16 +293,38 @@ relationships:
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  puppet.puppet_plugin.operations.operation
-                - postconfigure: puppet.puppet_plugin.operations.operation
-                - establish:     puppet.puppet_plugin.operations.operation
-                - unlink:        puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
     cloudify.puppet.connected_to:
         derived_from: cloudify.relationships.connected_to
         source_interfaces:
             # The comment under types.interfaces applies here too
             cloudify.interfaces.relationship_lifecycle:
-                - preconfigure:  puppet.puppet_plugin.operations.operation
-                - postconfigure: puppet.puppet_plugin.operations.operation
-                - establish:     puppet.puppet_plugin.operations.operation
-                - unlink:        puppet.puppet_plugin.operations.operation
+                create:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                configure:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                start:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                stop:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
+                delete:
+                    implementation: puppet.puppet_plugin.operations.operation
+                    inputs: {}
