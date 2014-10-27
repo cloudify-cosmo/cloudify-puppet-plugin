@@ -8,7 +8,7 @@ plugins:
 
 
 node_types:
-    cloudify.types.puppet.middleware_server:
+    cloudify.puppet.nodes.SoftwareComponent:
         derived_from: cloudify.nodes.SoftwareComponent
         properties:
             # All Puppet related configuration goes inside
@@ -176,7 +176,7 @@ node_types:
                     implementation: puppet.puppet_plugin.operations.operation
                     inputs: {}
 
-    cloudify.types.puppet.app_server:
+    cloudify.puppet.nodes.ApplicationServer:
         derived_from: cloudify.nodes.ApplicationServer
         properties:
             puppet_config: {}
@@ -198,7 +198,7 @@ node_types:
                     implementation: puppet.puppet_plugin.operations.operation
                     inputs: {}
 
-    cloudify.types.puppet.db_server:
+    cloudify.puppet.nodes.DBMS:
         derived_from: cloudify.nodes.DBMS
         properties:
             puppet_config: {}
@@ -220,7 +220,7 @@ node_types:
                     implementation: puppet.puppet_plugin.operations.operation
                     inputs: {}
 
-    cloudify.types.puppet.web_server:
+    cloudify.puppet.nodes.WebServer:
         derived_from: cloudify.nodes.WebServer
         properties:
             puppet_config: {}
@@ -242,30 +242,7 @@ node_types:
                     implementation: puppet.puppet_plugin.operations.operation
                     inputs: {}
 
-
-    cloudify.types.puppet.message_bus_server:
-        derived_from: cloudify.nodes.MessageBusServer
-        properties:
-            puppet_config: {}
-        interfaces:
-            cloudify.interfaces.lifecycle:
-                create:
-                    implementation: puppet.puppet_plugin.operations.operation
-                    inputs: {}
-                configure:
-                    implementation: puppet.puppet_plugin.operations.operation
-                    inputs: {}
-                start:
-                    implementation: puppet.puppet_plugin.operations.operation
-                    inputs: {}
-                stop:
-                    implementation: puppet.puppet_plugin.operations.operation
-                    inputs: {}
-                delete:
-                    implementation: puppet.puppet_plugin.operations.operation
-                    inputs: {}
-
-    cloudify.types.puppet.app_module:
+    cloudify.puppet.nodes.ApplicationModule:
         derived_from: cloudify.nodes.ApplicationModule
         properties:
             puppet_config: {}
