@@ -9,7 +9,7 @@ plugins:
 
 node_types:
     cloudify.types.puppet.middleware_server:
-        derived_from: cloudify.types.middleware_server
+        derived_from: cloudify.nodes.SoftwareComponent
         properties:
             # All Puppet related configuration goes inside
             # the "puppet_config" property.
@@ -177,7 +177,7 @@ node_types:
                     inputs: {}
 
     cloudify.types.puppet.app_server:
-        derived_from: cloudify.types.app_server
+        derived_from: cloudify.nodes.ApplicationServer
         properties:
             puppet_config: {}
         interfaces:
@@ -199,7 +199,7 @@ node_types:
                     inputs: {}
 
     cloudify.types.puppet.db_server:
-        derived_from: cloudify.types.db_server
+        derived_from: cloudify.nodes.DBMS
         properties:
             puppet_config: {}
         interfaces:
@@ -221,7 +221,7 @@ node_types:
                     inputs: {}
 
     cloudify.types.puppet.web_server:
-        derived_from: cloudify.types.web_server
+        derived_from: cloudify.nodes.WebServer
         properties:
             puppet_config: {}
         interfaces:
@@ -244,7 +244,7 @@ node_types:
 
 
     cloudify.types.puppet.message_bus_server:
-        derived_from: cloudify.types.message_bus_server
+        derived_from: cloudify.nodes.MessageBusServer
         properties:
             puppet_config: {}
         interfaces:
@@ -266,7 +266,7 @@ node_types:
                     inputs: {}
 
     cloudify.types.puppet.app_module:
-        derived_from: cloudify.types.app_module
+        derived_from: cloudify.nodes.ApplicationModule
         properties:
             puppet_config: {}
         interfaces:
