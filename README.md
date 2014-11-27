@@ -1,6 +1,6 @@
 # Cloudify Puppet Plugin
 
-Cloudify plugin for the puppet configuration system
+Cloudify plugin for the [Puppet](http://puppetlabs.com/).
 
 ## Usage
 
