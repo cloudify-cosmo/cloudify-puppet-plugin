@@ -21,14 +21,14 @@ import setuptools
 setuptools.setup(
     zip_safe=False,
     name='cloudify-puppet-plugin',
-    version='1.2a2',
+    version='1.2a3',
     author='ilya',
     author_email='ilya.sher@coding-knight.com',
     packages=['puppet_plugin'],
     license='LICENSE',
     description='Cloudify Chef plugin',
     install_requires=[
-        'cloudify-plugins-common==3.2a2',
+        'cloudify-plugins-common==3.2a3',
     ],
     package_data={
         'puppet_plugin': [
