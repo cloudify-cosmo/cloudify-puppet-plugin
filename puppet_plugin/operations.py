@@ -19,7 +19,7 @@ EXPECTED_OP_PREFIXES = (
 
 
 def _extract_op(ctx):
-    prefix, _, op = ctx.operation.rpartition('.')
+    prefix, _, op = ctx.operation.name.rpartition('.')
     if prefix not in EXPECTED_OP_PREFIXES:
         ctx.logger.warn("Node operation is expected to start with '{0}' "
                         "but starts with '{1}'".format(
