@@ -46,7 +46,9 @@ class PuppetTest(unittest.TestCase):
         ctx = MockCloudifyContext(
             node_name='node_name',
             node_id=datetime.datetime.utcnow().strftime(t),
-            operation='cloudify.interfaces.lifecycle.' + operation,
+            operation={
+                'name': 'cloudify.interfaces.lifecycle.' + operation
+            },
             properties={
                 'puppet_config': properties
             })
