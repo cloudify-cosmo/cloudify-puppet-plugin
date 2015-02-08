@@ -6,9 +6,10 @@ from cloudify.exceptions import NonRecoverableError
 from cloudify.mocks import MockCloudifyContext
 
 import puppet_plugin.operations
-operation = puppet_plugin.operations.operation
 from puppet_plugin.manager import (
     PuppetManager, PuppetRunner, PuppetAgentRunner, PuppetStandaloneRunner)
+
+operation = puppet_plugin.operations.operation
 
 
 # Warning: Singleton
