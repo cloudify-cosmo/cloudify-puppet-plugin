@@ -299,8 +299,7 @@ class PuppetDebianInstaller(PuppetInstaller):
 
         url = self.props.get('repos', {}).get('deb', {}).get(ver)
         return (
-            url
-            or
+            url or
             'http://apt.puppetlabs.com/puppetlabs-release-{0}.deb'.format(ver))
 
     def install_package_from_url(self, url):
@@ -418,8 +417,9 @@ class PuppetRunner(object):
             'export FACTERLIB={0}\n'
             'export CLOUDIFY_FACTS_FILE={1}\n{2}'
             'e=0\n'
-            .format(self.DIRS['local_custom_facts'], facts_file.name, environ)
-            + cmd + ' || e=$?\n'
+            .format(self.DIRS['local_custom_facts'],
+                    facts_file.name, environ) +
+            cmd + ' || e=$?\n'
             'echo Exit code: $e\n'
             'if [ $e -eq 1 ];then exit 1;fi\n'
             'if [ $(($e & 4)) -eq 4 ];then exit 4;fi\n'
