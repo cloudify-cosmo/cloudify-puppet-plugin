@@ -4,9 +4,9 @@
 plugins:
     puppet:
         executor: host_agent
-        source: https://github.com/cloudify-cosmo/cloudify-puppet-plugin/archive/1.3rc1.zip
+        source: https://github.com/cloudify-cosmo/cloudify-puppet-plugin/archive/1.3.zip
         package_name: cloudify-puppet-plugin
-        package_version: 1.3rc1
+        package_version: 1.3
 
 
 node_types:
