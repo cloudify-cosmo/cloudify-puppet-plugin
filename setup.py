@@ -26,7 +26,7 @@ setuptools.setup(
     license='LICENSE',
     description='Cloudify Chef plugin',
     install_requires=[
-        'cloudify-plugins-common>=3.4a1',
+        'cloudify-plugins-common>=3.3.1',
     ],
     package_data={
         'puppet_plugin': [
